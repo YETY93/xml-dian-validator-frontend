@@ -1,4 +1,4 @@
-import { TypeDocumentEnum } from "./enums/type-doucument-enum";
+import { TypeDocumentEnum } from './enums/type-doucument-enum';
 
 export interface XmlValidationRequest {
   documentType: TypeDocumentEnum;

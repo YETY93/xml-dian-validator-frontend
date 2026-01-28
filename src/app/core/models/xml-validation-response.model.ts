@@ -1,4 +1,4 @@
-import { EstatusErrorEnum } from "./enums/status-error-enum";
+import { EstatusErrorEnum } from './enums/status-error-enum';
 
 export interface XmlValidationResponse {
   success: boolean;

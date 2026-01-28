@@ -14,7 +14,7 @@ import { NzTagComponent } from 'ng-zorro-antd/tag';
 import { ValidationErrorType } from '../../core/models/enums/validation-errorType-enum';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ValidationIssue } from '../../core/models/validation-issue.model';
-import { NzCollapseComponent, NzCollapseModule } from 'ng-zorro-antd/collapse';
+import { NzCollapseModule } from 'ng-zorro-antd/collapse';
 
 @Component({
   selector: 'app-validation',
@@ -30,7 +30,7 @@ import { NzCollapseComponent, NzCollapseModule } from 'ng-zorro-antd/collapse';
     NzButtonModule,
     NzAlertModule,
     NzTagComponent,
-    NzCollapseModule
+    NzCollapseModule,
   ],
 })
 export class ValidationComponent {
