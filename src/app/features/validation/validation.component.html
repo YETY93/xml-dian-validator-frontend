@@ -1,0 +1,121 @@
+<nz-card nzTitle="Validador XML DIAN">
+  @if (maxSeverity()) {
+    <div style="margin-bottom: 16px; display: flex; justify-content: flex-end">
+      <nz-tag
+        [nzColor]="getSeverityColor(maxSeverity()!)"
+        style="font-size: 14px; padding: 4px 12px"
+      >
+        {{ getSeverityLabel(maxSeverity()!) }}
+      </nz-tag>
+    </div>
+  }
+  <nz-form-item>
+    <nz-form-label>Tipo de documento</nz-form-label>
+    <nz-form-control>
+      <nz-select [ngModel]="documentType()" (ngModelChange)="documentType.set($event)">
+        <nz-option [nzValue]="TypeDocumentEnum.INVOICE" nzLabel="Factura electrónica"></nz-option>
+        <nz-option
+          [nzValue]="TypeDocumentEnum.CREDIT_NOTE"
+          nzLabel="Nota crédito"
+          nzDisabled="true"
+        ></nz-option>
+        <nz-option
+          [nzValue]="TypeDocumentEnum.DEBIT_NOTE"
+          nzLabel="Nota débito"
+          nzDisabled="true"
+        ></nz-option>
+        <nz-option
+          [nzValue]="TypeDocumentEnum.DOCUMENTO_SOPORTE"
+          nzLabel="Documento Soporte"
+          nzDisabled="true"
+        ></nz-option>
+      </nz-select>
+    </nz-form-control>
+  </nz-form-item>
+
+  <nz-form-item>
+    <nz-form-label>XML</nz-form-label>
+    <nz-form-control>
+      <textarea nz-input rows="10" [ngModel]="xml()" (ngModelChange)="xml.set($event)"> </textarea>
+    </nz-form-control>
+  </nz-form-item>
+
+  <nz-form-item>
+    <nz-form-label>Cargar Archivo XML</nz-form-label>
+    <nz-form-control>
+      <input
+        #fileInput
+        type="file"
+        accept=".xml"
+        style="display: none"
+        (change)="onFileSelected($event)"
+      />
+      <button nz-button nzType="default" (click)="fileInput.click()">
+        <span nz-icon nzType="upload"></span>
+        Seleccionar archivo
+      </button>
+      @if (xml()) {
+        <span style="margin-left: 8px; color: #1890ff">Archivo cargado con éxito</span>
+      }
+    </nz-form-control>
+  </nz-form-item>
+
+  <nz-form-item>
+    <nz-form-label>Clave técnica (opcional)</nz-form-label>
+    <nz-form-control>
+      <input nz-input [(ngModel)]="technicalKey" />
+    </nz-form-control>
+  </nz-form-item>
+
+  <button nz-button nzType="primary" (click)="validate()">Validar</button>
+
+  @for (error of errors(); track $index) {
+    <nz-alert [nzType]="error.type" [nzMessage]="error.message" nzShowIcon> </nz-alert>
+  }
+
+  @if (fileLoaded()) {
+    <span style="margin-left: 8px; color: #52c41a">
+      <span nz-icon nzType="check-circle"></span>
+      Archivo leído correctamente
+    </span>
+  }
+
+  @if (hasAnyErrors()) {
+    <nz-collapse style="margin-top: 24px">
+      <nz-collapse-panel
+        [nzHeader]="'❌ Errores XSD (' + errorsByType().XSD.length + ')'"
+        [nzActive]="errorsByType().XSD.length > 0"
+      >
+        @for (err of errorsByType().XSD; track $index) {
+          <nz-alert nzType="error" [nzMessage]="err.message" nzShowIcon style="margin-bottom: 8px">
+          </nz-alert>
+        }
+      </nz-collapse-panel>
+      <nz-collapse-panel
+        [nzHeader]="'⚠️ Errores Semánticos (' + errorsByType().SEMANTIC.length + ')'"
+        [nzActive]="errorsByType().SEMANTIC.length > 0"
+      >
+        @for (err of errorsByType().SEMANTIC; track $index) {
+          <nz-alert
+            [nzType]="err.severity"
+            [nzMessage]="err.message"
+            nzShowIcon
+            style="margin-bottom: 8px"
+          >
+          </nz-alert>
+        }
+      </nz-collapse-panel>
+
+      <nz-collapse-panel
+        [nzHeader]="'🔐 Errores de Firma (' + errorsByType().SIGNATURE.length + ')'"
+        [nzActive]="errorsByType().SIGNATURE.length > 0"
+      >
+        @for (err of errorsByType().SIGNATURE; track $index) {
+          <nz-alert nzType="error" [nzMessage]="err.message" nzShowIcon style="margin-bottom: 8px">
+          </nz-alert>
+        }
+      </nz-collapse-panel>
+    </nz-collapse>
+  }
+
+</nz-card>
