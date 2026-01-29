@@ -1,0 +1,124 @@
+.app-header {
+  background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
+  padding: 0;
+  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+  z-index: 10;
+  height: 72px;
+  display: flex;
+  align-items: center;
+
+  .header-content {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 50px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+
+      .logo-icon {
+        width: 44px;
+        height: 44px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(4px);
+
+        span {
+          font-size: 24px;
+          color: #fff;
+        }
+      }
+
+      .logo-text {
+        display: flex;
+        flex-direction: column;
+
+        h1 {
+          margin: 0;
+          font-size: 20px;
+          font-weight: 700;
+          color: #fff;
+          letter-spacing: 0.5px;
+        }
+
+        .subtitle {
+          font-size: 12px;
+          color: rgba(255, 255, 255, 0.8);
+          font-weight: 400;
+          margin-top: 2px;
+        }
+      }
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+
+      .status-icon {
+        font-size: 18px;
+        color: #52c41a;
+        background: rgba(255, 255, 255, 0.95);
+        padding: 6px;
+        border-radius: 50%;
+      }
+
+      .version {
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.85);
+        background: rgba(255, 255, 255, 0.15);
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-weight: 500;
+      }
+    }
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .app-header {
+    height: 64px;
+
+    .header-content {
+      padding: 0 20px;
+
+      .logo {
+        gap: 12px;
+
+        .logo-icon {
+          width: 36px;
+          height: 36px;
+
+          span {
+            font-size: 20px;
+          }
+        }
+
+        .logo-text {
+          h1 {
+            font-size: 16px;
+          }
+
+          .subtitle {
+            display: none;
+          }
+        }
+      }
+
+      .header-actions {
+        .version {
+          display: none;
+        }
+      }
+    }
+  }
+}

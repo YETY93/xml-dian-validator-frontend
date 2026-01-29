@@ -5,6 +5,7 @@ import angularTemplate from '@angular-eslint/eslint-plugin-template';
 import prettier from 'eslint-plugin-prettier/recommended';
 import tsParser from '@typescript-eslint/parser';
 import tsPlugin from '@typescript-eslint/eslint-plugin';
+import importPlugin from 'eslint-plugin-import';
 import globals from 'globals';
 import { URL } from 'url';
 
@@ -22,6 +23,7 @@ export default [
       '*.min.js',
       'src/index.html',
       'src/app/app.html',
+      'projects/**',
     ],
   },
   prettier,
@@ -42,6 +44,7 @@ export default [
     plugins: {
       '@angular-eslint': angular,
       '@typescript-eslint': tsPlugin,
+      import: importPlugin,
     },
     rules: {
       ...angular.configs.recommended.rules,
@@ -74,6 +77,19 @@ export default [
         'error',
         {
           argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_',
+        },
+      ],
+      'import/order': [
+        'error',
+        {
+          groups: ['builtin', 'external', 'internal', ['parent', 'sibling'], 'index'],
+          'newlines-between': 'always',
+          alphabetize: {
+            order: 'asc',
+            caseInsensitive: true,
+          },
         },
       ],
     },
@@ -89,6 +105,7 @@ export default [
     },
     rules: {
       ...angularTemplate.configs.recommended.rules,
+      ...angularTemplate.configs.accessibility.rules,
       '@angular-eslint/template/prefer-control-flow': 'error',
     },
   },

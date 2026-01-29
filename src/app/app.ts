@@ -1,11 +1,9 @@
 import { Component, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import {
-  NzContentComponent,
-  NzFooterComponent,
-  NzHeaderComponent,
-  NzLayoutComponent,
-} from 'ng-zorro-antd/layout';
+import { NzIconModule } from 'ng-zorro-antd/icon';
+import { NzContentComponent, NzFooterComponent, NzLayoutComponent } from 'ng-zorro-antd/layout';
+
+import { HeaderComponent } from './shared/components/header/header.component';
 
 @Component({
   selector: 'app-root',
@@ -14,9 +12,10 @@ import {
   imports: [
     RouterOutlet,
     NzLayoutComponent,
-    NzHeaderComponent,
     NzContentComponent,
     NzFooterComponent,
+    NzIconModule,
+    HeaderComponent,
   ],
 })
 export class App {

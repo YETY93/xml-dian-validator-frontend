@@ -1,9 +1,10 @@
-import { Injectable, inject } from '@angular/core';
-import { XmlValidationRequest } from '../models/xml-validation-request.model';
-import { Observable } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
-import { XmlValidationResult } from '../models/xml-validation-result';
+import { Injectable, inject } from '@angular/core';
+import { Observable } from 'rxjs';
+
 import { ApiResponse } from '../models/api-response';
+import { XmlValidationRequest } from '../models/xml-validation-request.model';
+import { XmlValidationResult } from '../models/xml-validation-result';
 
 @Injectable({
   providedIn: 'root',

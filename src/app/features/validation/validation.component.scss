@@ -1,0 +1,159 @@
+.validation-card {
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+
+  .error-banner-section {
+    margin-top: 24px;
+
+    .error-banner {
+      margin-bottom: 8px;
+      border-radius: 6px;
+    }
+  }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+
+    .title-section {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+
+      .title-icon {
+        font-size: 24px;
+        color: #1890ff;
+      }
+
+      h2 {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 600;
+        color: rgba(0, 0, 0, 0.85);
+      }
+    }
+
+    .status-tag {
+      font-size: 14px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+  }
+
+  .optional-label {
+    font-weight: normal;
+    color: rgba(0, 0, 0, 0.45);
+    margin-left: 4px;
+  }
+
+  .xml-dragger {
+    background: #fafafa;
+    border-radius: 8px;
+    transition: all 0.3s;
+
+    &:hover {
+      background: #f0f7ff;
+    }
+  }
+
+  .file-info-box {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #e6f7ff;
+    border: 1px solid #91d5ff;
+    padding: 12px 16px;
+    border-radius: 8px;
+
+    .file-details {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      span[nz-icon] {
+        font-size: 20px;
+      }
+
+      .file-name {
+        font-weight: 500;
+        color: #0050b3;
+      }
+    }
+  }
+
+  .xml-textarea {
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 13px;
+    background: #f5f5f5;
+    border: 1px solid #d9d9d9;
+    border-radius: 4px;
+  }
+
+  .actions-section {
+    margin-top: 32px;
+    display: flex;
+    justify-content: center;
+  }
+
+  .loading-container {
+    padding: 40px;
+    text-align: center;
+  }
+
+  .results-section {
+    margin-top: 40px;
+    animation: fadeIn 0.5s ease;
+  }
+
+  .error-groups {
+    .error-panel {
+      margin-bottom: 12px;
+      border-radius: 8px !important;
+      overflow: hidden;
+      border: 1px solid #f0f0f0;
+
+      &.xsd-panel {
+        border-left: 4px solid #ff4d4f;
+      }
+      &.semantic-panel {
+        border-left: 4px solid #faad14;
+      }
+      &.signature-panel {
+        border-left: 4px solid #ff4d4f;
+      }
+
+      .panel-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 600;
+
+        span[nz-icon] {
+          font-size: 18px;
+        }
+      }
+    }
+
+    .error-alert {
+      margin-bottom: 8px;
+      border-radius: 6px;
+    }
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
