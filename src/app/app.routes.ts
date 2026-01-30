@@ -4,8 +4,8 @@ export const routes: Routes = [
   { path: '', redirectTo: 'validation', pathMatch: 'full' },
   {
     path: 'validation',
-    loadComponent: () =>
-      import('./features/validation/validation.component').then((m) => m.ValidationComponent),
+    loadChildren: () =>
+      import('./features/validation/validation.routes').then((m) => m.VALIDATION_ROUTES),
   },
   { path: '**', redirectTo: 'validation' },
 ];

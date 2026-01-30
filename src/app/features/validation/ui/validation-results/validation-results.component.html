@@ -1,0 +1,70 @@
+<nz-divider nzText="Resultados de la Validación" nzOrientation="left"></nz-divider>
+
+@if (maxSeverity() === ErrorStatus.INFO && !hasAnyErrors()) {
+  <nz-result
+    nzStatus="success"
+    nzTitle="Documento Válido"
+    nzSubTitle="El archivo XML cumple con todas las validaciones técnicas de la DIAN."
+  >
+  </nz-result>
+}
+
+@if (hasAnyErrors()) {
+  <div class="error-groups">
+    <nz-collapse [nzBordered]="false">
+      <nz-collapse-panel
+        [nzHeader]="xsdHeader"
+        [nzActive]="errorsByType().XSD.length > 0"
+        [nzDisabled]="errorsByType().XSD.length === 0"
+        class="error-panel xsd-panel"
+      >
+        <ng-template #xsdHeader>
+          <div class="panel-header">
+            <span nz-icon nzType="code" nzTheme="outline"></span>
+            <span>Errores de Esquema (XSD)</span>
+            <nz-tag nzColor="error" *ngIf="errorsByType().XSD.length">{{ errorsByType().XSD.length }}</nz-tag>
+          </div>
+        </ng-template>
+        @for (err of errorsByType().XSD; track $index) {
+          <nz-alert nzType="error" [nzMessage]="err.message" nzShowIcon class="error-alert"></nz-alert>
+        }
+      </nz-collapse-panel>
+
+      <nz-collapse-panel
+        [nzHeader]="semanticHeader"
+        [nzActive]="errorsByType().SEMANTIC.length > 0"
+        [nzDisabled]="errorsByType().SEMANTIC.length === 0"
+        class="error-panel semantic-panel"
+      >
+        <ng-template #semanticHeader>
+          <div class="panel-header">
+            <span nz-icon nzType="reconciliation" nzTheme="outline"></span>
+            <span>Errores Semánticos y Reglas</span>
+            <nz-tag [nzColor]="errorsByType().SEMANTIC.length ? 'warning' : 'default'">{{ errorsByType().SEMANTIC.length }}</nz-tag>
+          </div>
+        </ng-template>
+        @for (err of errorsByType().SEMANTIC; track $index) {
+          <nz-alert [nzType]="err.severity" [nzMessage]="err.message" nzShowIcon class="error-alert"></nz-alert>
+        }
+      </nz-collapse-panel>
+
+      <nz-collapse-panel
+        [nzHeader]="signatureHeader"
+        [nzActive]="errorsByType().SIGNATURE.length > 0"
+        [nzDisabled]="errorsByType().SIGNATURE.length === 0"
+        class="error-panel signature-panel"
+      >
+        <ng-template #signatureHeader>
+          <div class="panel-header">
+            <span nz-icon nzType="lock" nzTheme="outline"></span>
+            <span>Errores de Firma Digital</span>
+            <nz-tag nzColor="error" *ngIf="errorsByType().SIGNATURE.length">{{ errorsByType().SIGNATURE.length }}</nz-tag>
+          </div>
+        </ng-template>
+        @for (err of errorsByType().SIGNATURE; track $index) {
+          <nz-alert nzType="error" [nzMessage]="err.message" nzShowIcon class="error-alert"></nz-alert>
+        }
+      </nz-collapse-panel>
+    </nz-collapse>
+  </div>
+}

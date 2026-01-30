@@ -1,0 +1,62 @@
+<div nz-row [nzGutter]="24">
+  <div nz-col [nzSpan]="12">
+    <nz-form-item>
+      <nz-form-label nzRequired>Tipo de documento</nz-form-label>
+      <nz-form-control>
+        <nz-select
+          [ngModel]="documentType()"
+          (ngModelChange)="onDocumentTypeChange($event)"
+          name="docType"
+          nzSize="large"
+        >
+          <nz-option [nzValue]="DocumentType.INVOICE" nzLabel="Factura electrónica"></nz-option>
+          <nz-option [nzValue]="DocumentType.CREDIT_NOTE" nzLabel="Nota crédito" nzDisabled></nz-option>
+          <nz-option [nzValue]="DocumentType.DEBIT_NOTE" nzLabel="Nota débito" nzDisabled></nz-option>
+          <nz-option [nzValue]="DocumentType.DOCUMENTO_SOPORTE" nzLabel="Documento Soporte" nzDisabled></nz-option>
+        </nz-select>
+      </nz-form-control>
+    </nz-form-item>
+  </div>
+  <div nz-col [nzSpan]="12">
+    <nz-form-item>
+      <nz-form-label>Clave técnica <span class="optional-label">(Opcional)</span></nz-form-label>
+      <nz-form-control>
+        <input
+          nz-input
+          [ngModel]="technicalKey()"
+          (ngModelChange)="onTechnicalKeyChange($event)"
+          name="techKey"
+          placeholder="Ingrese clave técnica si aplica"
+          nzSize="large"
+        />
+      </nz-form-control>
+    </nz-form-item>
+  </div>
+</div>
+
+<div class="actions-section">
+  <nz-space [nzSize]="'middle'">
+    <button
+      *nzSpaceItem
+      nz-button
+      nzType="primary"
+      nzSize="large"
+      (click)="onValidate()"
+      [nzLoading]="loading()"
+      [disabled]="disabled()"
+    >
+      <span nz-icon nzType="play-circle"></span>
+      Iniciar Validación
+    </button>
+    <button
+      *nzSpaceItem
+      nz-button
+      nzType="default"
+      nzSize="large"
+      (click)="onClear()"
+      [disabled]="loading()"
+    >
+      Limpiar
+    </button>
+  </nz-space>
+</div>

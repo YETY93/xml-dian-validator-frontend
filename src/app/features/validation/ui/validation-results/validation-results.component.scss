@@ -1,0 +1,38 @@
+.error-groups {
+  margin-top: 16px;
+}
+
+.error-panel {
+  margin-bottom: 8px;
+
+  &.xsd-panel .panel-header {
+    color: #ff4d4f;
+  }
+
+  &.semantic-panel .panel-header {
+    color: #faad14;
+  }
+
+  &.signature-panel .panel-header {
+    color: #ff4d4f;
+  }
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+
+  span[nz-icon] {
+    font-size: 16px;
+  }
+}
+
+.error-alert {
+  margin-bottom: 8px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
