@@ -1,0 +1,53 @@
+.error-groups {
+  margin-top: 16px;
+}
+
+.error-panel {
+  margin-bottom: 8px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+
+  &.xsd-panel {
+    .panel-header {
+      color: var(--error);
+    }
+  }
+
+  &.semantic-panel {
+    .panel-header {
+      color: var(--warning);
+    }
+  }
+
+  &.signature-panel {
+    .panel-header {
+      color: var(--error);
+    }
+  }
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+  color: var(--text-primary);
+  padding: 12px 16px;
+  background: var(--bg-panel-header);
+
+  span[nz-icon] {
+    font-size: 16px;
+  }
+}
+
+.error-alert {
+  margin-bottom: 8px;
+  border-radius: var(--radius-sm);
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}

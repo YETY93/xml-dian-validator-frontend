@@ -1,0 +1,1979 @@
+
+==================================================
+ARCHIVO: src/app/app.config.ts
+==================================================
+
+import { registerLocaleData } from '@angular/common';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import es from '@angular/common/locales/es';
+import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
+import { provideRouter } from '@angular/router';
+import {
+  CheckCircleOutline,
+  MoonOutline,
+  SafetyCertificateFill,
+  SunOutline,
+} from '@ant-design/icons-angular/icons';
+import { es_ES, provideNzI18n } from 'ng-zorro-antd/i18n';
+import { provideNzIcons } from 'ng-zorro-antd/icon';
+
+import { routes } from './app.routes';
+import { errorInterceptor } from './core/interceptors/error.interceptor';
+
+registerLocaleData(es);
+
+const icons = [SafetyCertificateFill, CheckCircleOutline, MoonOutline, SunOutline];
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideBrowserGlobalErrorListeners(),
+    provideRouter(routes),
+    provideNzI18n(es_ES),
+    provideNzIcons(icons),
+    provideHttpClient(withInterceptors([errorInterceptor])),
+  ],
+};
+
+==================================================
+ARCHIVO: src/app/app.html
+==================================================
+
+<nz-layout class="app-layout">
+  <app-header />
+
+  <nz-content>
+    <div class="inner-content">
+      <router-outlet></router-outlet>
+    </div>
+  </nz-content>
+
+  <nz-footer>DIAN XML Validator ©2026 - Herramienta de validación técnica</nz-footer>
+</nz-layout>
+
+==================================================
+ARCHIVO: src/app/app.routes.ts
+==================================================
+
+import { Routes } from '@angular/router';
+
+export const routes: Routes = [
+  { path: '', redirectTo: 'validation', pathMatch: 'full' },
+  {
+    path: 'validation',
+    loadChildren: () =>
+      import('./features/validation/validation.routes').then((m) => m.VALIDATION_ROUTES),
+  },
+  { path: '**', redirectTo: 'validation' },
+];
+
+==================================================
+ARCHIVO: src/app/app.scss
+==================================================
+
+.app-layout {
+  min-height: 100vh;
+  background: var(--bg-app);
+
+  nz-content {
+    padding: 40px 0;
+
+    .inner-content {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+  }
+
+  nz-footer {
+    text-align: center;
+    color: var(--text-secondary);
+    background: transparent;
+    font-size: 14px;
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .app-layout {
+    nz-content {
+      padding: 24px 0;
+
+      .inner-content {
+        padding: 0 16px;
+      }
+    }
+
+    nz-footer {
+      font-size: 12px;
+      padding: 16px;
+    }
+  }
+}
+
+==================================================
+ARCHIVO: src/app/app.spec.ts
+==================================================
+
+import { TestBed } from '@angular/core/testing';
+import { App } from './app';
+
+describe('App', () => {
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [App],
+    }).compileComponents();
+  });
+
+  it('should create the app', () => {
+    const fixture = TestBed.createComponent(App);
+    const app = fixture.componentInstance;
+    expect(app).toBeTruthy();
+  });
+
+  it('should render title', async () => {
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('h1')?.textContent).toContain('Hello, dian-xml-validator-front');
+  });
+});
+
+==================================================
+ARCHIVO: src/app/app.ts
+==================================================
+
+import { Component, signal } from '@angular/core';
+import { RouterOutlet } from '@angular/router';
+import { NzIconModule } from 'ng-zorro-antd/icon';
+import { NzContentComponent, NzFooterComponent, NzLayoutComponent } from 'ng-zorro-antd/layout';
+
+import { HeaderComponent } from './shared/components/header/header.component';
+
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.html',
+  styleUrl: './app.scss',
+  imports: [
+    RouterOutlet,
+    NzLayoutComponent,
+    NzContentComponent,
+    NzFooterComponent,
+    NzIconModule,
+    HeaderComponent,
+  ],
+})
+export class App {
+  protected readonly title = signal('dian-xml-validator-front');
+}
+
+==================================================
+ARCHIVO: src/app/core/interceptors/error.interceptor.ts
+==================================================
+
+import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
+import { catchError, throwError } from 'rxjs';
+
+export const errorInterceptor: HttpInterceptorFn = (req, next) => {
+  return next(req).pipe(
+    catchError((error: HttpErrorResponse) => {
+      let errorMessage = 'Ha ocurrido un error inesperado';
+
+      if (error.error instanceof ErrorEvent) {
+        // Error del cliente
+        errorMessage = `Error: ${error.error.message}`;
+      } else {
+        // Error del servidor
+        switch (error.status) {
+          case 0:
+            errorMessage = 'No se pudo conectar con el servidor. Verifique su conexión.';
+            break;
+          case 400:
+            errorMessage = error.error?.message || 'Solicitud incorrecta';
+            break;
+          case 404:
+            errorMessage = 'Recurso no encontrado';
+            break;
+          case 500:
+            errorMessage = 'Error interno del servidor';
+            break;
+          default:
+            errorMessage = error.error?.message || `Error ${error.status}: ${error.statusText}`;
+        }
+      }
+
+      return throwError(() => new Error(errorMessage));
+    }),
+  );
+};
+
+==================================================
+ARCHIVO: src/app/core/services/theme.service.ts
+==================================================
+
+import { Injectable, signal, effect } from '@angular/core';
+
+export type Theme = 'light' | 'dark';
+
+@Injectable({
+    providedIn: 'root',
+})
+export class ThemeService {
+    theme = signal<Theme>('light');
+
+    constructor() {
+        // 1. Cargar preferencia guardada o detectar del sistema
+        const savedTheme = localStorage.getItem('theme') as Theme;
+        const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+        if (savedTheme) {
+            this.theme.set(savedTheme);
+        } else if (systemDark) {
+            this.theme.set('dark');
+        }
+
+        // 2. Aplicar el tema al DOM cuando la señal cambie
+        effect(() => {
+            const currentTheme = this.theme();
+            document.documentElement.setAttribute('data-theme', currentTheme);
+            localStorage.setItem('theme', currentTheme);
+        });
+    }
+
+    toggleTheme(): void {
+        this.theme.update((current) => (current === 'light' ? 'dark' : 'light'));
+    }
+}
+
+==================================================
+ARCHIVO: src/app/features/validation/data/enums/document-type.enum.ts
+==================================================
+
+export enum DocumentType {
+  INVOICE = 'INVOICE',
+  CREDIT_NOTE = 'CREDIT_NOTE',
+  DEBIT_NOTE = 'DEBIT_NOTE',
+  DOCUMENTO_SOPORTE = 'DOCUMENTO_SOPORTE',
+}
+
+==================================================
+ARCHIVO: src/app/features/validation/data/enums/error-status.enum.ts
+==================================================
+
+export enum ErrorStatus {
+  INFO = 'info',
+  WARNING = 'warning',
+  ERROR = 'error',
+}
+
+==================================================
+ARCHIVO: src/app/features/validation/data/enums/validation-error-type.enum.ts
+==================================================
+
+export enum ValidationErrorType {
+  XSD = 'XSD',
+  SEMANTIC = 'SEMANTIC',
+  SIGNATURE = 'SIGNATURE',
+}
+
+==================================================
+ARCHIVO: src/app/features/validation/data/index.ts
+==================================================
+
+// Enums
+export * from './enums/document-type.enum';
+export * from './enums/error-status.enum';
+export * from './enums/validation-error-type.enum';
+
+// Models
+export * from './models/api-response.model';
+export * from './models/validation-issue.model';
+export * from './models/validation-request.model';
+export * from './models/validation-result.model';
+
+// Services
+export * from './services/xml-validation.service';
+
+==================================================
+ARCHIVO: src/app/features/validation/data/models/api-response.model.ts
+==================================================
+
+export interface ApiResponse<T> {
+  success: boolean;
+  status: 'SUCCESS' | 'ERROR';
+  code: string;
+  action: string;
+  lastAction: string;
+  data: T;
+}
+
+==================================================
+ARCHIVO: src/app/features/validation/data/models/validation-issue.model.ts
+==================================================
+
+import { ErrorStatus } from '../enums/error-status.enum';
+import { ValidationErrorType } from '../enums/validation-error-type.enum';
+
+export interface ValidationIssue {
+  type: ValidationErrorType;
+  severity: ErrorStatus;
+  message: string;
+}
+
+==================================================
+ARCHIVO: src/app/features/validation/data/models/validation-request.model.ts
+==================================================
+
+import { DocumentType } from '../enums/document-type.enum';
+
+export interface ValidationRequest {
+  documentType: DocumentType;
+  xml: string;
+  technicalKey?: string;
+}
+
+==================================================
+ARCHIVO: src/app/features/validation/data/models/validation-result.model.ts
+==================================================
+
+import { ValidationIssue } from './validation-issue.model';
+import { ErrorStatus } from '../enums/error-status.enum';
+
+export interface ValidationResult {
+  valid: boolean;
+  maxSeverity: ErrorStatus;
+  errors: ValidationIssue[];
+}
+
+==================================================
+ARCHIVO: src/app/features/validation/data/services/xml-validation.service.ts
+==================================================
+
+import { HttpClient } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
+import { Observable } from 'rxjs';
+
+import { environment } from '../../../../../environments/environment';
+import { ApiResponse } from '../models/api-response.model';
+import { ValidationRequest } from '../models/validation-request.model';
+import { ValidationResult } from '../models/validation-result.model';
+
+@Injectable({
+  providedIn: 'root',
+})
+export class XmlValidationService {
+  private readonly http = inject(HttpClient);
+  private readonly apiUrl = `${environment.apiUrl}${environment.apiEndpoints.xmlValidation}`;
+
+  validateXml(request: ValidationRequest): Observable<ApiResponse<ValidationResult>> {
+    return this.http.post<ApiResponse<ValidationResult>>(this.apiUrl, request);
+  }
+}
+
+==================================================
+ARCHIVO: src/app/features/validation/ui/file-upload/file-upload.component.html
+==================================================
+
+<nz-form-item>
+  <nz-form-label>Archivo XML</nz-form-label>
+  <nz-form-control>
+    @if (!fileLoaded()) {
+      <nz-upload
+        nzType="drag"
+        [nzMultiple]="false"
+        [nzBeforeUpload]="beforeUpload"
+        class="xml-dragger"
+      >
+        <p class="ant-upload-drag-icon">
+          <span nz-icon nzType="inbox"></span>
+        </p>
+        <p class="ant-upload-text">Haz clic o arrastra el archivo XML aquí</p>
+        <p class="ant-upload-hint">Soporta un solo archivo .xml</p>
+      </nz-upload>
+    } @else {
+      <div class="file-info-box">
+        <div class="file-details">
+          <span nz-icon nzType="file-text" nzTheme="twotone"></span>
+          <span class="file-name">{{ fileName() }}</span>
+        </div>
+        <button nz-button nzType="text" nzDanger (click)="onReset()">
+          <span nz-icon nzType="delete"></span>
+          Cambiar archivo
+        </button>
+      </div>
+      <nz-collapse nzGhost style="margin-top: 8px;">
+        <nz-collapse-panel nzHeader="Ver contenido XML">
+          <textarea
+            nz-input
+            [nzAutosize]="{ minRows: 4, maxRows: 10 }"
+            [value]="xml()"
+            readonly
+            class="xml-textarea"
+          ></textarea>
+        </nz-collapse-panel>
+      </nz-collapse>
+    }
+  </nz-form-control>
+</nz-form-item>
+
+==================================================
+ARCHIVO: src/app/features/validation/ui/file-upload/file-upload.component.scss
+==================================================
+
+:host {
+  display: block;
+}
+
+.xml-dragger {
+  .ant-upload-drag-icon {
+    color: var(--primary);
+    font-size: 48px;
+  }
+
+  .ant-upload-text {
+    font-size: 16px;
+    color: var(--text-primary);
+  }
+
+  .ant-upload-hint {
+    color: var(--text-secondary);
+  }
+}
+
+.file-info-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--info-bg);
+  border: 1px solid var(--info-border);
+  border-radius: var(--radius-md);
+
+  .file-details {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    span[nz-icon] {
+      font-size: 20px;
+      color: var(--success);
+    }
+
+    .file-name {
+      font-weight: 500;
+      color: var(--file-info-text);
+      word-break: break-all;
+    }
+  }
+
+  .file-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+}
+
+.xml-textarea {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 12px;
+  min-height: 200px;
+  resize: vertical;
+  background: var(--code-bg);
+  border: 1px solid var(--border-color-secondary);
+  color: var(--text-primary);
+  border-radius: var(--radius-sm);
+
+  &:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+  }
+}
+
+==================================================
+ARCHIVO: src/app/features/validation/ui/file-upload/file-upload.component.ts
+==================================================
+
+import { CommonModule } from '@angular/common';
+import { Component, input, output } from '@angular/core';
+import { NzButtonModule } from 'ng-zorro-antd/button';
+import { NzCollapseModule } from 'ng-zorro-antd/collapse';
+import { NzFormModule } from 'ng-zorro-antd/form';
+import { NzIconModule } from 'ng-zorro-antd/icon';
+import { NzInputModule } from 'ng-zorro-antd/input';
+import { NzUploadFile, NzUploadModule } from 'ng-zorro-antd/upload';
+
+@Component({
+  selector: 'app-file-upload',
+  standalone: true,
+  imports: [
+    CommonModule,
+    NzUploadModule,
+    NzButtonModule,
+    NzIconModule,
+    NzCollapseModule,
+    NzFormModule,
+    NzInputModule,
+  ],
+  templateUrl: './file-upload.component.html',
+  styleUrls: ['./file-upload.component.scss'],
+})
+export class FileUploadComponent {
+  fileName = input<string>('');
+  xml = input<string>('');
+  fileLoaded = input<boolean>(false);
+
+  fileSelected = output<{ content: string; file: NzUploadFile }>();
+  fileReset = output<void>();
+
+  beforeUpload = (file: NzUploadFile): boolean => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      this.fileSelected.emit({ content: reader.result as string, file });
+    };
+    reader.readAsText(file as unknown as File);
+    return false;
+  };
+
+  onReset(): void {
+    this.fileReset.emit();
+  }
+}
+
+==================================================
+ARCHIVO: src/app/features/validation/ui/index.ts
+==================================================
+
+export * from './file-upload/file-upload.component';
+export * from './validation-form/validation-form.component';
+export * from './validation-results/validation-results.component';
+
+==================================================
+ARCHIVO: src/app/features/validation/ui/validation-form/validation-form.component.html
+==================================================
+
+<div nz-row [nzGutter]="24">
+  <div nz-col [nzSpan]="12">
+    <nz-form-item>
+      <nz-form-label nzRequired>Tipo de documento</nz-form-label>
+      <nz-form-control>
+        <nz-select
+          [ngModel]="documentType()"
+          (ngModelChange)="onDocumentTypeChange($event)"
+          name="docType"
+          nzSize="large"
+        >
+          <nz-option [nzValue]="DocumentType.INVOICE" nzLabel="Factura electrónica"></nz-option>
+          <nz-option [nzValue]="DocumentType.CREDIT_NOTE" nzLabel="Nota crédito" nzDisabled></nz-option>
+          <nz-option [nzValue]="DocumentType.DEBIT_NOTE" nzLabel="Nota débito" nzDisabled></nz-option>
+          <nz-option [nzValue]="DocumentType.DOCUMENTO_SOPORTE" nzLabel="Documento Soporte" nzDisabled></nz-option>
+        </nz-select>
+      </nz-form-control>
+    </nz-form-item>
+  </div>
+  <div nz-col [nzSpan]="12">
+    <nz-form-item>
+      <nz-form-label>Clave técnica <span class="optional-label">(Opcional)</span></nz-form-label>
+      <nz-form-control>
+        <input
+          nz-input
+          [ngModel]="technicalKey()"
+          (ngModelChange)="onTechnicalKeyChange($event)"
+          name="techKey"
+          placeholder="Ingrese clave técnica si aplica"
+          nzSize="large"
+        />
+      </nz-form-control>
+    </nz-form-item>
+  </div>
+</div>
+
+<div class="actions-section">
+  <nz-space [nzSize]="'middle'">
+    <button
+      *nzSpaceItem
+      nz-button
+      nzType="primary"
+      nzSize="large"
+      (click)="onValidate()"
+      [nzLoading]="loading()"
+      [disabled]="disabled()"
+    >
+      <span nz-icon nzType="play-circle"></span>
+      Iniciar Validación
+    </button>
+    <button
+      *nzSpaceItem
+      nz-button
+      nzType="default"
+      nzSize="large"
+      (click)="onClear()"
+      [disabled]="loading()"
+    >
+      Limpiar
+    </button>
+  </nz-space>
+</div>
+
+==================================================
+ARCHIVO: src/app/features/validation/ui/validation-form/validation-form.component.scss
+==================================================
+
+.actions-section {
+  margin-top: 24px;
+  display: flex;
+  justify-content: flex-start;
+  gap: 12px;
+
+  .ant-btn {
+    height: 44px;
+    font-size: 15px;
+    border-radius: var(--radius-md);
+  }
+}
+
+.optional-label {
+  color: var(--text-secondary);
+  font-weight: normal;
+}
+
+==================================================
+ARCHIVO: src/app/features/validation/ui/validation-form/validation-form.component.ts
+==================================================
+
+import { CommonModule } from '@angular/common';
+import { Component, input, output } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { NzButtonModule } from 'ng-zorro-antd/button';
+import { NzFormModule } from 'ng-zorro-antd/form';
+import { NzGridModule } from 'ng-zorro-antd/grid';
+import { NzIconModule } from 'ng-zorro-antd/icon';
+import { NzInputModule } from 'ng-zorro-antd/input';
+import { NzSelectModule } from 'ng-zorro-antd/select';
+import { NzSpaceModule } from 'ng-zorro-antd/space';
+
+import { DocumentType } from '../../data/enums/document-type.enum';
+
+@Component({
+  selector: 'app-validation-form',
+  standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule,
+    NzFormModule,
+    NzSelectModule,
+    NzInputModule,
+    NzButtonModule,
+    NzGridModule,
+    NzIconModule,
+    NzSpaceModule,
+  ],
+  templateUrl: './validation-form.component.html',
+  styleUrls: ['./validation-form.component.scss'],
+})
+export class ValidationFormComponent {
+  documentType = input<DocumentType>(DocumentType.INVOICE);
+  technicalKey = input<string>('');
+  loading = input<boolean>(false);
+  disabled = input<boolean>(false);
+
+  documentTypeChange = output<DocumentType>();
+  technicalKeyChange = output<string>();
+  validate = output<void>();
+  clear = output<void>();
+
+  protected readonly DocumentType = DocumentType;
+
+  onDocumentTypeChange(value: DocumentType): void {
+    this.documentTypeChange.emit(value);
+  }
+
+  onTechnicalKeyChange(value: string): void {
+    this.technicalKeyChange.emit(value);
+  }
+
+  onValidate(): void {
+    this.validate.emit();
+  }
+
+  onClear(): void {
+    this.clear.emit();
+  }
+}
+
+==================================================
+ARCHIVO: src/app/features/validation/ui/validation-results/validation-results.component.html
+==================================================
+
+<nz-divider nzText="Resultados de la Validación" nzOrientation="left"></nz-divider>
+
+@if (maxSeverity() === ErrorStatus.INFO && !hasAnyErrors()) {
+  <nz-result
+    nzStatus="success"
+    nzTitle="Documento Válido"
+    nzSubTitle="El archivo XML cumple con todas las validaciones técnicas de la DIAN."
+  >
+  </nz-result>
+}
+
+@if (hasAnyErrors()) {
+  <div class="error-groups">
+    <nz-collapse [nzBordered]="false">
+      <nz-collapse-panel
+        [nzHeader]="xsdHeader"
+        [nzActive]="errorsByType().XSD.length > 0"
+        [nzDisabled]="errorsByType().XSD.length === 0"
+        class="error-panel xsd-panel"
+      >
+        <ng-template #xsdHeader>
+          <div class="panel-header">
+            <span nz-icon nzType="code" nzTheme="outline"></span>
+            <span>Errores de Esquema (XSD)</span>
+            <nz-tag nzColor="error" *ngIf="errorsByType().XSD.length">{{ errorsByType().XSD.length }}</nz-tag>
+          </div>
+        </ng-template>
+        @for (err of errorsByType().XSD; track $index) {
+          <nz-alert nzType="error" [nzMessage]="err.message" nzShowIcon class="error-alert"></nz-alert>
+        }
+      </nz-collapse-panel>
+
+      <nz-collapse-panel
+        [nzHeader]="semanticHeader"
+        [nzActive]="errorsByType().SEMANTIC.length > 0"
+        [nzDisabled]="errorsByType().SEMANTIC.length === 0"
+        class="error-panel semantic-panel"
+      >
+        <ng-template #semanticHeader>
+          <div class="panel-header">
+            <span nz-icon nzType="reconciliation" nzTheme="outline"></span>
+            <span>Errores Semánticos y Reglas</span>
+            <nz-tag [nzColor]="errorsByType().SEMANTIC.length ? 'warning' : 'default'">{{ errorsByType().SEMANTIC.length }}</nz-tag>
+          </div>
+        </ng-template>
+        @for (err of errorsByType().SEMANTIC; track $index) {
+          <nz-alert [nzType]="err.severity" [nzMessage]="err.message" nzShowIcon class="error-alert"></nz-alert>
+        }
+      </nz-collapse-panel>
+
+      <nz-collapse-panel
+        [nzHeader]="signatureHeader"
+        [nzActive]="errorsByType().SIGNATURE.length > 0"
+        [nzDisabled]="errorsByType().SIGNATURE.length === 0"
+        class="error-panel signature-panel"
+      >
+        <ng-template #signatureHeader>
+          <div class="panel-header">
+            <span nz-icon nzType="lock" nzTheme="outline"></span>
+            <span>Errores de Firma Digital</span>
+            <nz-tag nzColor="error" *ngIf="errorsByType().SIGNATURE.length">{{ errorsByType().SIGNATURE.length }}</nz-tag>
+          </div>
+        </ng-template>
+        @for (err of errorsByType().SIGNATURE; track $index) {
+          <nz-alert nzType="error" [nzMessage]="err.message" nzShowIcon class="error-alert"></nz-alert>
+        }
+      </nz-collapse-panel>
+    </nz-collapse>
+  </div>
+}
+
+==================================================
+ARCHIVO: src/app/features/validation/ui/validation-results/validation-results.component.scss
+==================================================
+
+.error-groups {
+  margin-top: 16px;
+}
+
+.error-panel {
+  margin-bottom: 8px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+
+  &.xsd-panel {
+    .panel-header {
+      color: var(--error);
+    }
+  }
+
+  &.semantic-panel {
+    .panel-header {
+      color: var(--warning);
+    }
+  }
+
+  &.signature-panel {
+    .panel-header {
+      color: var(--error);
+    }
+  }
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+  color: var(--text-primary);
+  padding: 12px 16px;
+  background: var(--bg-panel-header);
+
+  span[nz-icon] {
+    font-size: 16px;
+  }
+}
+
+.error-alert {
+  margin-bottom: 8px;
+  border-radius: var(--radius-sm);
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+==================================================
+ARCHIVO: src/app/features/validation/ui/validation-results/validation-results.component.ts
+==================================================
+
+import { CommonModule } from '@angular/common';
+import { Component, computed, input } from '@angular/core';
+import { NzAlertModule } from 'ng-zorro-antd/alert';
+import { NzCollapseModule } from 'ng-zorro-antd/collapse';
+import { NzDividerModule } from 'ng-zorro-antd/divider';
+import { NzIconModule } from 'ng-zorro-antd/icon';
+import { NzResultModule } from 'ng-zorro-antd/result';
+import { NzTagComponent } from 'ng-zorro-antd/tag';
+
+import { ErrorStatus } from '../../data/enums/error-status.enum';
+import { ValidationErrorType } from '../../data/enums/validation-error-type.enum';
+import { ValidationIssue } from '../../data/models/validation-issue.model';
+
+@Component({
+  selector: 'app-validation-results',
+  standalone: true,
+  imports: [
+    CommonModule,
+    NzResultModule,
+    NzDividerModule,
+    NzCollapseModule,
+    NzAlertModule,
+    NzTagComponent,
+    NzIconModule,
+  ],
+  templateUrl: './validation-results.component.html',
+  styleUrls: ['./validation-results.component.scss'],
+})
+export class ValidationResultsComponent {
+  maxSeverity = input<ErrorStatus | null>(null);
+  errorsByType = input<Record<ValidationErrorType, ValidationIssue[]>>({
+    [ValidationErrorType.XSD]: [],
+    [ValidationErrorType.SEMANTIC]: [],
+    [ValidationErrorType.SIGNATURE]: [],
+  });
+
+  protected readonly ErrorStatus = ErrorStatus;
+  protected readonly ValidationErrorType = ValidationErrorType;
+
+  hasAnyErrors = computed(() => {
+    const errors = this.errorsByType();
+    return errors.XSD.length > 0 || errors.SEMANTIC.length > 0 || errors.SIGNATURE.length > 0;
+  });
+
+  getSeverityColor(severity: ErrorStatus): string {
+    switch (severity) {
+      case ErrorStatus.ERROR:
+        return 'red';
+      case ErrorStatus.WARNING:
+        return 'orange';
+      case ErrorStatus.INFO:
+        return 'green';
+      default:
+        return 'default';
+    }
+  }
+
+  getSeverityLabel(severity: ErrorStatus): string {
+    switch (severity) {
+      case ErrorStatus.ERROR:
+        return 'Documento Inválido';
+      case ErrorStatus.WARNING:
+        return 'Documento con Advertencias';
+      case ErrorStatus.INFO:
+        return 'Documento Válido';
+      default:
+        return '';
+    }
+  }
+}
+
+==================================================
+ARCHIVO: src/app/features/validation/validation.component.html
+==================================================
+
+<nz-card [nzBordered]="false" class="validation-card">
+  <div class="card-header">
+    <div class="title-section">
+      <span nz-icon nzType="file-search" nzTheme="outline" class="title-icon"></span>
+      <h2>Validación de Documento</h2>
+    </div>
+    @if (validated() && maxSeverity()) {
+      <nz-tag [nzColor]="maxSeverity() === ErrorStatus.INFO ? 'success' : 'error'" class="status-tag">
+        <span nz-icon [nzType]="maxSeverity() === ErrorStatus.INFO ? 'check-circle' : 'exclamation-circle'"></span>
+        {{ maxSeverity() === ErrorStatus.INFO ? 'Documento Válido' : 'Documento Inválido' }}
+      </nz-tag>
+    }
+  </div>
+
+  <nz-divider></nz-divider>
+
+  <form nz-form nzLayout="vertical">
+    <app-validation-form
+      [documentType]="documentType()"
+      [technicalKey]="technicalKey()"
+      [loading]="loading()"
+      [disabled]="!canValidate()"
+      (documentTypeChange)="onDocumentTypeChange($event)"
+      (technicalKeyChange)="onTechnicalKeyChange($event)"
+      (validate)="onValidate()"
+      (clear)="onClear()"
+    />
+
+    <nz-divider></nz-divider>
+
+    <app-file-upload
+      [fileName]="fileName()"
+      [xml]="xml()"
+      [fileLoaded]="fileLoaded()"
+      (fileSelected)="onFileSelected($event)"
+      (fileReset)="onFileReset()"
+    />
+  </form>
+
+  @if (loading()) {
+    <div class="loading-container">
+      <nz-spin nzSimple nzSize="large" nzTip="Validando documento..."></nz-spin>
+    </div>
+  }
+
+  @if (errors().length > 0) {
+    <div class="error-banner-section">
+      @for (err of errors(); track $index) {
+        <nz-alert [nzType]="err.type" [nzMessage]="err.message" nzShowIcon nzBanner class="error-banner"></nz-alert>
+      }
+    </div>
+  }
+
+  @if (validated()) {
+    <div class="results-section">
+      <app-validation-results
+        [maxSeverity]="maxSeverity()"
+        [errorsByType]="errorsByType()"
+      />
+    </div>
+  }
+</nz-card>
+
+==================================================
+ARCHIVO: src/app/features/validation/validation.component.scss
+==================================================
+
+.validation-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+
+  .error-banner-section {
+    margin-top: 24px;
+
+    .error-banner {
+      margin-bottom: 8px;
+      border-radius: var(--radius-sm);
+    }
+  }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+
+    .title-section {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+
+      .title-icon {
+        font-size: 24px;
+        color: var(--primary);
+      }
+
+      h2 {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 600;
+        color: var(--text-primary);
+      }
+    }
+
+    .status-tag {
+      font-size: 14px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+  }
+
+  .optional-label {
+    font-weight: normal;
+    color: var(--text-secondary);
+    margin-left: 4px;
+  }
+
+  .xml-dragger {
+    background: var(--bg-upload);
+    border-radius: var(--radius-md);
+    transition: all var(--transition-normal);
+
+    &:hover {
+      background: var(--bg-upload-hover);
+    }
+  }
+
+  .file-info-box {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--info-bg);
+    border: 1px solid var(--info-border);
+    padding: 12px 16px;
+    border-radius: var(--radius-md);
+
+    .file-details {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      span[nz-icon] {
+        font-size: 20px;
+        color: var(--file-info-text);
+      }
+
+      .file-name {
+        font-weight: 500;
+        color: var(--file-info-text);
+      }
+    }
+
+    .file-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+  }
+
+  .xml-textarea {
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 13px;
+    background: var(--code-bg);
+    border: 1px solid var(--border-color-secondary);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+
+    &:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+    }
+  }
+
+  .actions-section {
+    margin-top: 32px;
+    display: flex;
+    justify-content: center;
+  }
+
+  .loading-container {
+    padding: 40px;
+    text-align: center;
+  }
+
+  .results-section {
+    margin-top: 40px;
+    animation: fadeIn 0.5s ease;
+  }
+
+  .error-groups {
+    .error-panel {
+      margin-bottom: 12px;
+      border-radius: var(--radius-md) !important;
+      overflow: hidden;
+      border: 1px solid var(--border-color);
+      background: var(--bg-panel);
+
+      &.xsd-panel {
+        border-left: 4px solid var(--error);
+      }
+      &.semantic-panel {
+        border-left: 4px solid var(--warning);
+      }
+      &.signature-panel {
+        border-left: 4px solid var(--error);
+      }
+
+      .panel-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 600;
+        color: var(--text-primary);
+        background: var(--bg-panel-header);
+
+        span[nz-icon] {
+          font-size: 18px;
+        }
+      }
+    }
+
+    .error-alert {
+      margin-bottom: 8px;
+      border-radius: var(--radius-sm);
+    }
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .validation-card {
+    .card-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .file-info-box {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 12px;
+    }
+  }
+}
+
+==================================================
+ARCHIVO: src/app/features/validation/validation.component.ts
+==================================================
+
+import { CommonModule } from '@angular/common';
+import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { NzAlertModule } from 'ng-zorro-antd/alert';
+import { NzCardModule } from 'ng-zorro-antd/card';
+import { NzDividerModule } from 'ng-zorro-antd/divider';
+import { NzFormModule } from 'ng-zorro-antd/form';
+import { NzIconModule } from 'ng-zorro-antd/icon';
+import { NzSpinModule } from 'ng-zorro-antd/spin';
+import { NzTagComponent } from 'ng-zorro-antd/tag';
+import { NzUploadFile } from 'ng-zorro-antd/upload';
+
+import {
+  DocumentType,
+  ErrorStatus,
+  ValidationErrorType,
+  ValidationIssue,
+  XmlValidationService,
+} from './data';
+import { FileUploadComponent, ValidationFormComponent, ValidationResultsComponent } from './ui';
+
+@Component({
+  selector: 'app-validation',
+  standalone: true,
+  imports: [
+    CommonModule,
+    NzCardModule,
+    NzFormModule,
+    NzTagComponent,
+    NzAlertModule,
+    NzDividerModule,
+    NzIconModule,
+    NzSpinModule,
+    FileUploadComponent,
+    ValidationFormComponent,
+    ValidationResultsComponent,
+  ],
+  templateUrl: './validation.component.html',
+  styleUrls: ['./validation.component.scss'],
+})
+export class ValidationComponent {
+  private service = inject(XmlValidationService);
+  private destroyRef = inject(DestroyRef);
+
+  // State signals
+  documentType = signal<DocumentType>(DocumentType.INVOICE);
+  xml = signal<string>('');
+  technicalKey = signal<string>('');
+  fileName = signal<string>('');
+  fileLoaded = signal<boolean>(false);
+  loading = signal<boolean>(false);
+  validated = signal<boolean>(false);
+  maxSeverity = signal<ErrorStatus | null>(null);
+  errorsByType = signal<Record<ValidationErrorType, ValidationIssue[]>>({
+    [ValidationErrorType.XSD]: [],
+    [ValidationErrorType.SEMANTIC]: [],
+    [ValidationErrorType.SIGNATURE]: [],
+  });
+  errors = signal<{ type: ErrorStatus; message: string }[]>([]);
+
+  // Computed
+  protected readonly ErrorStatus = ErrorStatus;
+  protected readonly DocumentType = DocumentType;
+
+  canValidate = computed(() => this.xml().length > 0 && !this.loading());
+
+  // Event handlers
+  onFileSelected(event: { content: string; file: NzUploadFile }): void {
+    this.xml.set(event.content);
+    this.fileName.set(event.file.name);
+    this.fileLoaded.set(true);
+    this.errors.set([]);
+  }
+
+  onFileReset(): void {
+    this.reset();
+  }
+
+  onDocumentTypeChange(type: DocumentType): void {
+    this.documentType.set(type);
+  }
+
+  onTechnicalKeyChange(key: string): void {
+    this.technicalKey.set(key);
+  }
+
+  onValidate(): void {
+    if (!this.xml()) return;
+
+    this.loading.set(true);
+    this.validated.set(false);
+    this.errors.set([]);
+    this.errorsByType.set({
+      [ValidationErrorType.XSD]: [],
+      [ValidationErrorType.SEMANTIC]: [],
+      [ValidationErrorType.SIGNATURE]: [],
+    });
+
+    this.service
+      .validateXml({
+        documentType: this.documentType(),
+        xml: this.xml(),
+        technicalKey: this.technicalKey(),
+      })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (response) => {
+          const data = response.data;
+          this.maxSeverity.set(data.maxSeverity);
+
+          const grouped: Record<ValidationErrorType, ValidationIssue[]> = {
+            [ValidationErrorType.XSD]: [],
+            [ValidationErrorType.SEMANTIC]: [],
+            [ValidationErrorType.SIGNATURE]: [],
+          };
+
+          data.errors.forEach((error) => {
+            grouped[error.type].push(error);
+          });
+
+          this.errorsByType.set(grouped);
+          this.validated.set(true);
+          this.loading.set(false);
+        },
+        error: (err: Error) => {
+          this.loading.set(false);
+          this.errors.set([
+            {
+              type: ErrorStatus.ERROR,
+              message: err.message || 'Error de conexión con el servidor de validación.',
+            },
+          ]);
+        },
+      });
+  }
+
+  onClear(): void {
+    this.reset();
+  }
+
+  private reset(): void {
+    this.xml.set('');
+    this.fileLoaded.set(false);
+    this.validated.set(false);
+    this.maxSeverity.set(null);
+    this.fileName.set('');
+    this.technicalKey.set('');
+    this.errors.set([]);
+    this.errorsByType.set({
+      [ValidationErrorType.XSD]: [],
+      [ValidationErrorType.SEMANTIC]: [],
+      [ValidationErrorType.SIGNATURE]: [],
+    });
+  }
+}
+
+==================================================
+ARCHIVO: src/app/features/validation/validation.routes.ts
+==================================================
+
+import { Routes } from '@angular/router';
+
+export const VALIDATION_ROUTES: Routes = [
+  {
+    path: '',
+    loadComponent: () => import('./validation.component').then((m) => m.ValidationComponent),
+  },
+];
+
+==================================================
+ARCHIVO: src/app/shared/components/header/header.component.html
+==================================================
+
+<nz-header class="app-header">
+  <div class="header-content">
+    <div class="logo">
+      <div class="logo-icon">
+        <span nz-icon nzType="safety-certificate" nzTheme="fill"></span>
+      </div>
+      <div class="logo-text">
+        <h1>DIAN XML Validator</h1>
+        <span class="subtitle">Herramienta de validación técnica</span>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button
+        class="theme-toggle"
+        (click)="toggleTheme()"
+        [title]="isDarkTheme ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'"
+        aria-label="Toggle theme">
+        <span nz-icon [nzType]="isDarkTheme ? 'sun' : 'moon'" nzTheme="outline"></span>
+      </button>
+      <span nz-icon nzType="check-circle" nzTheme="outline" class="status-icon"></span>
+      <span class="version">v1.0</span>
+    </div>
+  </div>
+</nz-header>
+
+==================================================
+ARCHIVO: src/app/shared/components/header/header.component.scss
+==================================================
+
+.app-header {
+  background: var(--header-bg);
+  padding: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  z-index: 10;
+  height: 72px;
+  display: flex;
+  align-items: center;
+
+  .header-content {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 50px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      height: 100%;
+
+      .logo-icon {
+        width: 44px;
+        height: 44px;
+        background: var(--header-icon-bg);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        span {
+          font-size: 24px;
+          color: var(--header-text);
+        }
+      }
+
+      .logo-text {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+
+        h1 {
+          margin: 0;
+          font-size: 20px;
+          font-weight: 600;
+          color: var(--header-text);
+          letter-spacing: -0.3px;
+          line-height: 1.2;
+        }
+
+        .subtitle {
+          font-size: 12px;
+          color: rgba(255, 255, 255, 0.75);
+          font-weight: 400;
+          margin-top: 2px;
+          line-height: 1.2;
+        }
+      }
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+
+      .status-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        font-size: 16px;
+        color: var(--success);
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 8px;
+      }
+
+      .version {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 32px;
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.8);
+        background: rgba(255, 255, 255, 0.1);
+        padding: 0 10px;
+        border-radius: 8px;
+        font-weight: 500;
+        margin-right: 4px;
+      }
+
+      .theme-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        color: var(--header-text);
+        font-size: 14px;
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.2);
+          border-color: rgba(255, 255, 255, 0.3);
+          transform: translateY(-1px);
+        }
+
+        &:active {
+          transform: translateY(0);
+        }
+
+        &:focus {
+          outline: none;
+          box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+        }
+      }
+    }
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .app-header {
+    height: 60px;
+
+    .header-content {
+      padding: 0 20px;
+
+      .logo {
+        gap: 12px;
+
+        .logo-icon {
+          width: 36px;
+          height: 36px;
+
+          span {
+            font-size: 20px;
+          }
+        }
+
+        .logo-text {
+          h1 {
+            font-size: 16px;
+          }
+
+          .subtitle {
+            display: none;
+          }
+        }
+      }
+
+      .header-actions {
+        .version {
+          display: none;
+        }
+      }
+    }
+  }
+}
+
+==================================================
+ARCHIVO: src/app/shared/components/header/header.component.ts
+==================================================
+
+import { CommonModule } from '@angular/common';
+import { Component, inject } from '@angular/core';
+
+import { NzIconModule } from 'ng-zorro-antd/icon';
+import { NzHeaderComponent } from 'ng-zorro-antd/layout';
+
+import { ThemeService } from '../../../core/services/theme.service';
+
+@Component({
+  selector: 'app-header',
+  templateUrl: './header.component.html',
+  styleUrls: ['./header.component.scss'],
+  imports: [CommonModule, NzHeaderComponent, NzIconModule],
+  standalone: true,
+})
+export class HeaderComponent {
+  private readonly themeService = inject(ThemeService);
+
+  get isDarkTheme(): boolean {
+    return this.themeService.theme() === 'dark';
+  }
+
+  toggleTheme(): void {
+    this.themeService.toggleTheme();
+  }
+}
+
+==================================================
+ARCHIVO: src/environments/environment.prod.ts
+==================================================
+
+export const environment = {
+  production: true,
+  apiUrl: 'https://api.dian-validator.com',
+  apiEndpoints: {
+    xmlValidation: '/api/xml/validate',
+  },
+};
+
+==================================================
+ARCHIVO: src/environments/environment.ts
+==================================================
+
+export const environment = {
+  production: false,
+  apiUrl: 'http://localhost:8080',
+  apiEndpoints: {
+    xmlValidation: '/api/xml/validate',
+  },
+};
+
+==================================================
+ARCHIVO: src/index.html
+==================================================
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>DianXmlValidatorFront</title>
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+</head>
+<body>
+  <app-root></app-root>
+</body>
+</html>
+
+==================================================
+ARCHIVO: src/main.ts
+==================================================
+
+import { bootstrapApplication } from '@angular/platform-browser';
+import { appConfig } from './app/app.config';
+import { App } from './app/app';
+
+bootstrapApplication(App, appConfig).catch((err) => console.error(err));
+
+==================================================
+ARCHIVO: src/styles.scss
+==================================================
+
+/* ============================================
+   DIAN XML Validator - Theme System
+   Clean Architecture: Components consume tokens only
+   ============================================ */
+
+/* ============================================
+   FASE 1: BASE TOKENS (primitives)
+   ============================================ */
+
+:root {
+  /* Primary Palette - Emerald Green */
+  --primary-100: #d1fae5;
+  --primary-200: #a7f3d0;
+  --primary-300: #6ee7b7;
+  --primary-400: #34d399;
+  --primary-500: #10b981;
+  --primary-600: #059669;
+  --primary-700: #047857;
+  --primary-800: #065f46;
+  --primary-900: #064e3b;
+
+  /* Neutral Palette */
+  --neutral-50: #fafafa;
+  --neutral-100: #f5f5f5;
+  --neutral-200: #e5e5e5;
+  --neutral-300: #d4d4d4;
+  --neutral-400: #a3a3a3;
+  --neutral-500: #737373;
+  --neutral-600: #525252;
+  --neutral-700: #404040;
+  --neutral-800: #262626;
+  --neutral-900: #171717;
+
+  /* Slate Palette */
+  --slate-50: #f8fafc;
+  --slate-100: #f1f5f9;
+  --slate-200: #e2e8f0;
+  --slate-300: #cbd5e1;
+  --slate-400: #94a3b8;
+  --slate-500: #64748b;
+  --slate-600: #475569;
+  --slate-700: #334155;
+  --slate-800: #1e293b;
+  --slate-900: #0f172a;
+
+  /* Semantic Colors */
+  --success-500: #22c55e;
+  --success-100: #dcfce7;
+  --success-200: #86efac;
+
+  --warning-500: #f59e0b;
+  --warning-100: #fef3c7;
+  --warning-200: #fde68a;
+
+  --error-500: #ef4444;
+  --error-100: #fee2e2;
+  --error-200: #fca5a5;
+
+  --info-500: #0ea5e9;
+  --info-100: #e0f2fe;
+  --info-200: #7dd3fc;
+}
+
+/* ============================================
+   FASE 2: SEMANTIC TOKENS (theme-aware)
+   ============================================ */
+
+:root {
+  /* Light Theme */
+  --bg-app: #f0fdf4;
+  --bg-card: #ffffff;
+  --bg-surface: #ecfdf5;
+  --bg-surface-hover: #d1fae5;
+  --bg-input: #ffffff;
+  --bg-input-hover: #f0fdf4;
+  --bg-input-focus: #ffffff;
+  --bg-panel: #ffffff;
+  --bg-panel-header: #f0fdf4;
+  --bg-upload: #f0fdf4;
+  --bg-upload-hover: #d1fae5;
+
+  --text-primary: #064e3b;
+  --text-secondary: #065f46;
+  --text-tertiary: #047857;
+  --text-inverse: #ffffff;
+  --text-label: #065f46;
+  --text-input: #064e3b;
+
+  --border-color: #a7f3d0;
+  --border-color-secondary: #6ee7b7;
+  --border-color-focus: var(--primary-500);
+  --border-upload: #6ee7b7;
+
+  --primary: var(--primary-500);
+  --primary-dark: var(--primary-600);
+  --primary-light: var(--primary-400);
+  --success: var(--success-500);
+  --warning: var(--warning-500);
+  --error: var(--error-500);
+  --info: var(--info-500);
+
+  --success-bg: var(--success-100);
+  --success-border: var(--success-200);
+  --warning-bg: var(--warning-100);
+  --warning-border: var(--warning-200);
+  --error-bg: var(--error-100);
+  --error-border: var(--error-200);
+  --info-bg: var(--info-100);
+  --info-border: var(--info-200);
+
+  --file-info-text: var(--primary-700);
+  --code-bg: #f0fdf4;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+
+  --header-bg: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-700) 100%);
+  --header-text: #ffffff;
+  --header-icon-bg: rgba(255, 255, 255, 0.2);
+
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.3s ease;
+}
+
+/* ============================================
+   DARK THEME - Slate backgrounds + Emerald accents
+   ============================================ */
+
+[data-theme='dark'] {
+  /* FONDOS: Grises oscuros (slate), no verdes */
+  --bg-app: #0f172a;        /* slate-900 */
+  --bg-card: #1e293b;       /* slate-800 */
+  --bg-surface: #334155;    /* slate-700 */
+  --bg-surface-hover: #475569; /* slate-600 */
+  --bg-input: #334155;
+  --bg-input-hover: #475569;
+  --bg-input-focus: #334155;
+  --bg-panel: #1e293b;
+  --bg-panel-header: #252f47;
+  --bg-upload: #252f47;
+  --bg-upload-hover: #334155;
+
+  /* TEXTOS: Blancos/grises claros, no verdes */
+  --text-primary: #f8fafc;   /* slate-50 */
+  --text-secondary: #94a3b8; /* slate-400 */
+  --text-tertiary: #64748b;  /* slate-500 */
+  --text-inverse: #0f172a;
+  --text-label: #e2e8f0;
+  --text-input: #f1f5f9;
+
+  /* BORDES: Grises con tinte verde sutil */
+  --border-color: #334155;
+  --border-color-secondary: #475569;
+  --border-color-focus: var(--primary-400);
+  --border-upload: #475569;
+
+  /* ACCENTOS: Verde esmeralda brillante solo para interactivos */
+  --primary: #10b981;        /* emerald-500 */
+  --primary-dark: #059669;   /* emerald-600 */
+  --primary-light: #34d399;  /* emerald-400 */
+  --success: #4ade80;
+  --warning: #fbbf24;
+  --error: #f87171;
+  --info: #38bdf8;
+
+  --success-bg: rgba(74, 222, 128, 0.15);
+  --success-border: rgba(74, 222, 128, 0.3);
+  --warning-bg: rgba(251, 191, 36, 0.15);
+  --warning-border: rgba(251, 191, 36, 0.3);
+  --error-bg: rgba(248, 113, 113, 0.15);
+  --error-border: rgba(248, 113, 113, 0.3);
+  --info-bg: rgba(56, 189, 248, 0.15);
+  --info-border: rgba(56, 189, 248, 0.3);
+
+  --file-info-text: #6ee7b7;
+  --code-bg: #1e293b;
+
+  /* Sombras con glow verde sutil */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 0 15px rgba(16, 185, 129, 0.15);
+  --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 0 30px rgba(16, 185, 129, 0.1);
+
+  /* Header ligeramente diferente al fondo */
+  --header-bg: #001e35;
+  --header-text: #f8fafc;
+  --header-icon-bg: rgba(16, 185, 129, 0.15);
+
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.3s ease;
+}
+
+/* ============================================
+   FASE 3: NG-ZORRO OVERRIDES (centralizado)
+   ============================================ */
+
+/* Optimized transitions */
+html[data-theme] * {
+  transition:
+    background-color var(--transition-normal),
+    border-color var(--transition-normal),
+    color var(--transition-normal);
+}
+
+/* Inputs */
+.ant-input,
+.ant-input-affix-wrapper,
+.ant-select-selector,
+.ant-picker {
+  background-color: var(--bg-input) !important;
+  border-color: var(--border-color-secondary) !important;
+  color: var(--text-input) !important;
+  border-radius: var(--radius-sm);
+
+  &:hover {
+    border-color: var(--primary-light);
+  }
+
+  &:focus,
+  &.ant-input-affix-wrapper-focused {
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2) !important;
+  }
+}
+
+.ant-form-item-label > label {
+  color: var(--text-label);
+}
+
+/* Upload */
+.ant-upload-drag {
+  background-color: var(--bg-upload) !important;
+  border-color: var(--border-upload) !important;
+  border-radius: var(--radius-md);
+  transition: all var(--transition-normal);
+  border-style: dashed;
+
+  &:hover {
+    background-color: var(--bg-upload-hover) !important;
+    border-color: var(--primary) !important;
+  }
+}
+
+.ant-upload-drag-icon {
+  color: var(--primary);
+}
+
+/* Alerts */
+.ant-alert {
+  background: var(--bg-panel);
+  border-color: var(--border-color);
+  border-radius: var(--radius-sm);
+}
+
+.ant-alert-message {
+  color: var(--text-primary);
+}
+
+.ant-alert-description {
+  color: var(--text-secondary);
+}
+
+/* Cards */
+.ant-card {
+  background: var(--bg-card);
+  border-color: var(--border-color);
+  border-radius: var(--radius-lg);
+}
+
+/* Select */
+.ant-select-arrow {
+  color: var(--text-secondary);
+}
+
+/* Buttons - Primary */
+.ant-btn-primary {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%) !important;
+  border: none !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.3) !important;
+
+  &:hover,
+  &:focus {
+    background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary) 100%) !important;
+    box-shadow: 0 6px 8px -1px rgba(16, 185, 129, 0.4) !important;
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px -1px rgba(16, 185, 129, 0.3) !important;
+  }
+}
+
+/* Default button - light mode */
+.ant-btn:not(.ant-btn-primary) {
+  background: var(--bg-input);
+  border-color: var(--border-color-secondary);
+  color: var(--text-primary);
+
+  &:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+}
+
+/* Default button in dark mode */
+[data-theme='dark'] .ant-btn:not(.ant-btn-primary) {
+  background: var(--bg-input);
+  border-color: var(--border-color-secondary);
+  color: var(--text-primary);
+
+  &:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+}
+
+/* ============================================
+   GLOBAL STYLES
+   ============================================ */
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+}

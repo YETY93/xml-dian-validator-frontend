@@ -1,0 +1,41 @@
+<nz-form-item>
+  <nz-form-label>Archivo XML</nz-form-label>
+  <nz-form-control>
+    @if (!fileLoaded()) {
+      <nz-upload
+        nzType="drag"
+        [nzMultiple]="false"
+        [nzBeforeUpload]="beforeUpload"
+        class="xml-dragger"
+      >
+        <p class="ant-upload-drag-icon">
+          <span nz-icon nzType="inbox"></span>
+        </p>
+        <p class="ant-upload-text">Haz clic o arrastra el archivo XML aquí</p>
+        <p class="ant-upload-hint">Soporta un solo archivo .xml</p>
+      </nz-upload>
+    } @else {
+      <div class="file-info-box">
+        <div class="file-details">
+          <span nz-icon nzType="file-text" nzTheme="twotone"></span>
+          <span class="file-name">{{ fileName() }}</span>
+        </div>
+        <button nz-button nzType="text" nzDanger (click)="onReset()">
+          <span nz-icon nzType="delete"></span>
+          Cambiar archivo
+        </button>
+      </div>
+      <nz-collapse nzGhost style="margin-top: 8px;">
+        <nz-collapse-panel nzHeader="Ver contenido XML">
+          <textarea
+            nz-input
+            [nzAutosize]="{ minRows: 4, maxRows: 10 }"
+            [value]="xml()"
+            readonly
+            class="xml-textarea"
+          ></textarea>
+        </nz-collapse-panel>
+      </nz-collapse>
+    }
+  </nz-form-control>
+</nz-form-item>

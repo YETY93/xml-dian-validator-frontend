@@ -5,9 +5,9 @@
       <h2>Validación de Documento</h2>
     </div>
     @if (validated() && maxSeverity()) {
-      <nz-tag [nzColor]="getSeverityColor(maxSeverity()!)" class="status-tag">
-        <span nz-icon [nzType]="maxSeverity() === EstatusErrorEnum.INFO ? 'check-circle' : 'exclamation-circle'"></span>
-        {{ getSeverityLabel(maxSeverity()!) }}
+      <nz-tag [nzColor]="maxSeverity() === ErrorStatus.INFO ? 'success' : 'error'" class="status-tag">
+        <span nz-icon [nzType]="maxSeverity() === ErrorStatus.INFO ? 'check-circle' : 'exclamation-circle'"></span>
+        {{ maxSeverity() === ErrorStatus.INFO ? 'Documento Válido' : 'Documento Inválido' }}
       </nz-tag>
     }
   </div>
@@ -15,164 +15,48 @@
   <nz-divider></nz-divider>
 
   <form nz-form nzLayout="vertical">
-    <div nz-row [nzGutter]="24">
-      <div nz-col [nzSpan]="12">
-        <nz-form-item>
-          <nz-form-label nzRequired>Tipo de documento</nz-form-label>
-          <nz-form-control>
-            <nz-select [ngModel]="documentType()" (ngModelChange)="documentType.set($event)" name="docType" nzSize="large">
-              <nz-option [nzValue]="TypeDocumentEnum.INVOICE" nzLabel="Factura electrónica"></nz-option>
-              <nz-option [nzValue]="TypeDocumentEnum.CREDIT_NOTE" nzLabel="Nota crédito" nzDisabled></nz-option>
-              <nz-option [nzValue]="TypeDocumentEnum.DEBIT_NOTE" nzLabel="Nota débito" nzDisabled></nz-option>
-              <nz-option [nzValue]="TypeDocumentEnum.DOCUMENTO_SOPORTE" nzLabel="Documento Soporte" nzDisabled></nz-option>
-            </nz-select>
-          </nz-form-control>
-        </nz-form-item>
-      </div>
-      <div nz-col [nzSpan]="12">
-        <nz-form-item>
-          <nz-form-label>Clave técnica <span class="optional-label">(Opcional)</span></nz-form-label>
-          <nz-form-control>
-            <input nz-input [(ngModel)]="technicalKey" name="techKey" placeholder="Ingrese clave técnica si aplica" nzSize="large" />
-          </nz-form-control>
-        </nz-form-item>
-      </div>
-    </div>
+    <app-validation-form
+      [documentType]="documentType()"
+      [technicalKey]="technicalKey()"
+      [loading]="loading()"
+      [disabled]="!canValidate()"
+      (documentTypeChange)="onDocumentTypeChange($event)"
+      (technicalKeyChange)="onTechnicalKeyChange($event)"
+      (validate)="onValidate()"
+      (clear)="onClear()"
+    />
 
-    <nz-form-item>
-      <nz-form-label>Archivo XML</nz-form-label>
-      <nz-form-control>
-        @if (!fileLoaded()) {
-          <nz-upload
-            nzType="drag"
-            [nzMultiple]="false"
-            [nzBeforeUpload]="beforeUpload"
-            class="xml-dragger"
-          >
-            <p class="ant-upload-drag-icon">
-              <span nz-icon nzType="inbox"></span>
-            </p>
-            <p class="ant-upload-text">Haz clic o arrastra el archivo XML aquí</p>
-            <p class="ant-upload-hint">Soporta un solo archivo .xml</p>
-          </nz-upload>
-        } @else {
-          <div class="file-info-box">
-            <div class="file-details">
-              <span nz-icon nzType="file-text" nzTheme="twotone"></span>
-              <span class="file-name">{{ fileName() }}</span>
-            </div>
-            <button nz-button nzType="text" nzDanger (click)="reset()">
-              <span nz-icon nzType="delete"></span>
-              Cambiar archivo
-            </button>
-          </div>
-          <nz-collapse nzGhost style="margin-top: 8px;">
-            <nz-collapse-panel nzHeader="Ver contenido XML">
-               <textarea nz-input [nzAutosize]="{ minRows: 4, maxRows: 10 }" [ngModel]="xml()" (ngModelChange)="xml.set($event)" name="xmlContent" class="xml-textarea"></textarea>
-            </nz-collapse-panel>
-          </nz-collapse>
-        }
-      </nz-form-control>
-    </nz-form-item>
+    <nz-divider></nz-divider>
 
-    <div class="actions-section">
-      <nz-space [nzSize]="'middle'">
-        <button *nzSpaceItem nz-button nzType="primary" nzSize="large" (click)="validate()" [nzLoading]="loading()" [disabled]="!xml()">
-          <span nz-icon nzType="play-circle"></span>
-          Iniciar Validación
-        </button>
-        <button *nzSpaceItem nz-button nzType="default" nzSize="large" (click)="reset()" [disabled]="loading() || (!xml() && !validated())">
-          Limpiar
-        </button>
-      </nz-space>
-    </div>
+    <app-file-upload
+      [fileName]="fileName()"
+      [xml]="xml()"
+      [fileLoaded]="fileLoaded()"
+      (fileSelected)="onFileSelected($event)"
+      (fileReset)="onFileReset()"
+    />
   </form>
 
-    @if (loading()) {
+  @if (loading()) {
     <div class="loading-container">
       <nz-spin nzSimple nzSize="large" nzTip="Validando documento..."></nz-spin>
     </div>
-    }
+  }
 
-    @if (errors().length > 0) {
+  @if (errors().length > 0) {
     <div class="error-banner-section">
       @for (err of errors(); track $index) {
-      <nz-alert [nzType]="err.type" [nzMessage]="err.message" nzShowIcon nzBanner class="error-banner"></nz-alert>
+        <nz-alert [nzType]="err.type" [nzMessage]="err.message" nzShowIcon nzBanner class="error-banner"></nz-alert>
       }
     </div>
-    }
+  }
 
-    @if (validated()) {
+  @if (validated()) {
     <div class="results-section">
-      <nz-divider nzText="Resultados de la Validación" nzOrientation="left"></nz-divider>
-
-      @if (maxSeverity() === EstatusErrorEnum.INFO && !hasAnyErrors()) {
-        <nz-result
-          nzStatus="success"
-          nzTitle="Documento Válido"
-          nzSubTitle="El archivo XML cumple con todas las validaciones técnicas de la DIAN."
-        >
-        </nz-result>
-      }
-
-      @if (hasAnyErrors()) {
-        <div class="error-groups">
-          <nz-collapse [nzBordered]="false">
-            <nz-collapse-panel
-              [nzHeader]="xsdHeader"
-              [nzActive]="errorsByType().XSD.length > 0"
-              [nzDisabled]="errorsByType().XSD.length === 0"
-              class="error-panel xsd-panel"
-            >
-              <ng-template #xsdHeader>
-                <div class="panel-header">
-                  <span nz-icon nzType="code" nzTheme="outline"></span>
-                  <span>Errores de Esquema (XSD)</span>
-                  <nz-tag nzColor="error" *ngIf="errorsByType().XSD.length">{{ errorsByType().XSD.length }}</nz-tag>
-                </div>
-              </ng-template>
-              @for (err of errorsByType().XSD; track $index) {
-                <nz-alert nzType="error" [nzMessage]="err.message" nzShowIcon class="error-alert"></nz-alert>
-              }
-            </nz-collapse-panel>
-
-            <nz-collapse-panel
-              [nzHeader]="semanticHeader"
-              [nzActive]="errorsByType().SEMANTIC.length > 0"
-              [nzDisabled]="errorsByType().SEMANTIC.length === 0"
-              class="error-panel semantic-panel"
-            >
-              <ng-template #semanticHeader>
-                <div class="panel-header">
-                  <span nz-icon nzType="reconciliation" nzTheme="outline"></span>
-                  <span>Errores Semánticos y Reglas</span>
-                  <nz-tag [nzColor]="errorsByType().SEMANTIC.length ? 'warning' : 'default'">{{ errorsByType().SEMANTIC.length }}</nz-tag>
-                </div>
-              </ng-template>
-              @for (err of errorsByType().SEMANTIC; track $index) {
-                <nz-alert [nzType]="err.severity" [nzMessage]="err.message" nzShowIcon class="error-alert"></nz-alert>
-              }
-            </nz-collapse-panel>
-
-            <nz-collapse-panel
-              [nzHeader]="signatureHeader"
-              [nzActive]="errorsByType().SIGNATURE.length > 0"
-              [nzDisabled]="errorsByType().SIGNATURE.length === 0"
-              class="error-panel signature-panel"
-            >
-              <ng-template #signatureHeader>
-                <div class="panel-header">
-                  <span nz-icon nzType="lock" nzTheme="outline"></span>
-                  <span>Errores de Firma Digital</span>
-                  <nz-tag nzColor="error" *ngIf="errorsByType().SIGNATURE.length">{{ errorsByType().SIGNATURE.length }}</nz-tag>
-                </div>
-              </ng-template>
-              @for (err of errorsByType().SIGNATURE; track $index) {
-                <nz-alert nzType="error" [nzMessage]="err.message" nzShowIcon class="error-alert"></nz-alert>
-              }
-            </nz-collapse-panel>
-          </nz-collapse>
-        </div>
-      }
+      <app-validation-results
+        [maxSeverity]="maxSeverity()"
+        [errorsByType]="errorsByType()"
+      />
     </div>
-    }
+  }
+</nz-card>
