@@ -1,6 +1,6 @@
 .app-layout {
   min-height: 100vh;
-  background: #f0f2f5;
+  background: var(--bg-app);
 
   nz-content {
     padding: 40px 0;
@@ -14,7 +14,26 @@
 
   nz-footer {
     text-align: center;
-    color: rgba(0, 0, 0, 0.45);
+    color: var(--text-secondary);
     background: transparent;
+    font-size: 14px;
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .app-layout {
+    nz-content {
+      padding: 24px 0;
+
+      .inner-content {
+        padding: 0 16px;
+      }
+    }
+
+    nz-footer {
+      font-size: 12px;
+      padding: 16px;
+    }
   }
 }

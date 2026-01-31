@@ -1,7 +1,7 @@
 .app-header {
-  background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
+  background: var(--header-bg);
   padding: 0;
-  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   z-index: 10;
   height: 72px;
   display: flex;
@@ -25,16 +25,15 @@
       .logo-icon {
         width: 44px;
         height: 44px;
-        background: rgba(255, 255, 255, 0.2);
-        border-radius: 12px;
+        background: var(--header-icon-bg);
+        border-radius: 10px;
         display: flex;
         align-items: center;
         justify-content: center;
-        backdrop-filter: blur(4px);
 
         span {
           font-size: 24px;
-          color: #fff;
+          color: var(--header-text);
         }
       }
 
@@ -46,15 +45,15 @@
         h1 {
           margin: 0;
           font-size: 20px;
-          font-weight: 700;
-          color: #fff;
-          letter-spacing: 0.5px;
+          font-weight: 600;
+          color: var(--header-text);
+          letter-spacing: -0.3px;
           line-height: 1.2;
         }
 
         .subtitle {
           font-size: 12px;
-          color: rgba(255, 255, 255, 0.8);
+          color: rgba(255, 255, 255, 0.75);
           font-weight: 400;
           margin-top: 2px;
           line-height: 1.2;
@@ -65,23 +64,62 @@
     .header-actions {
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 12px;
 
       .status-icon {
-        font-size: 18px;
-        color: #52c41a;
-        background: rgba(255, 255, 255, 0.95);
-        padding: 6px;
-        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        font-size: 16px;
+        color: var(--success);
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 8px;
       }
 
       .version {
-        font-size: 12px;
-        color: rgba(255, 255, 255, 0.85);
-        background: rgba(255, 255, 255, 0.15);
-        padding: 4px 10px;
-        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 32px;
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.8);
+        background: rgba(255, 255, 255, 0.1);
+        padding: 0 10px;
+        border-radius: 8px;
         font-weight: 500;
+        margin-right: 4px;
+      }
+
+      .theme-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        color: var(--header-text);
+        font-size: 14px;
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.2);
+          border-color: rgba(255, 255, 255, 0.3);
+          transform: translateY(-1px);
+        }
+
+        &:active {
+          transform: translateY(0);
+        }
+
+        &:focus {
+          outline: none;
+          box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+        }
       }
     }
   }
@@ -90,14 +128,13 @@
 // Responsive adjustments
 @media (max-width: 768px) {
   .app-header {
-    height: 64px;
+    height: 60px;
 
     .header-content {
       padding: 0 20px;
 
       .logo {
         gap: 12px;
-        height: 100%;
 
         .logo-icon {
           width: 36px;
@@ -111,7 +148,6 @@
         .logo-text {
           h1 {
             font-size: 16px;
-            line-height: 1.2;
           }
 
           .subtitle {

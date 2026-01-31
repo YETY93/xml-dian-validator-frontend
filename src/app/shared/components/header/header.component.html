@@ -10,6 +10,13 @@
       </div>
     </div>
     <div class="header-actions">
+      <button
+        class="theme-toggle"
+        (click)="toggleTheme()"
+        [title]="isDarkTheme ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'"
+        aria-label="Toggle theme">
+        <span nz-icon [nzType]="isDarkTheme ? 'sun' : 'moon'" nzTheme="outline"></span>
+      </button>
       <span nz-icon nzType="check-circle" nzTheme="outline" class="status-icon"></span>
       <span class="version">v1.0</span>
     </div>
