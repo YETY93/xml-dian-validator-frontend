@@ -33,8 +33,9 @@
       [xml]="xml()"
       [fileLoaded]="fileLoaded()"
       (fileSelected)="onFileSelected($event)"
-      (fileReset)="onFileReset()"
-    />
+      (fileError)="onFileError($event)"
+      (fileReset)="onFileReset()">
+    </app-file-upload>
   </form>
 
   @if (loading()) {

@@ -18,6 +18,7 @@ import {
   XmlValidationService,
 } from './data';
 import { FileUploadComponent, ValidationFormComponent, ValidationResultsComponent } from './ui';
+import { log } from 'ng-zorro-antd/core/logger';
 
 @Component({
   selector: 'app-validation',
@@ -151,5 +152,18 @@ export class ValidationComponent {
       [ValidationErrorType.SEMANTIC]: [],
       [ValidationErrorType.SIGNATURE]: [],
     });
+  }
+
+  onFileError(message: string) {
+    this.errorsByType.update((errors) => ({
+      ...errors,
+      XSD: [
+        {
+          type: ValidationErrorType.XSD,
+          severity: ErrorStatus.ERROR,
+          message,
+        },
+      ],
+    }));
   }
 }

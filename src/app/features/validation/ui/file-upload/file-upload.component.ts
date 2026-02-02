@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, input, output } from '@angular/core';
+import { Component, EventEmitter, input, Output, output } from '@angular/core';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzCollapseModule } from 'ng-zorro-antd/collapse';
 import { NzFormModule } from 'ng-zorro-antd/form';
@@ -27,10 +27,18 @@ export class FileUploadComponent {
   xml = input<string>('');
   fileLoaded = input<boolean>(false);
 
-  fileSelected = output<{ content: string; file: NzUploadFile }>();
+  @Output() fileSelected = new EventEmitter<{ content: string; file: NzUploadFile }>();
+  @Output() fileError = new EventEmitter<string>();
+
   fileReset = output<void>();
 
   beforeUpload = (file: NzUploadFile): boolean => {
+    console.log('onFileError', file);
+    const isXml = file.name?.toLowerCase().endsWith('.xml');
+    if (!isXml) {
+      this.fileError.emit('Solo se permiten archivos con extensión .xml');
+      return false;
+    }
     const reader = new FileReader();
     reader.onload = () => {
       this.fileSelected.emit({ content: reader.result as string, file });

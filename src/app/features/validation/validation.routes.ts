@@ -1,8 +1,10 @@
 import { Routes } from '@angular/router';
 
+import { ValidationComponent } from './validation.component';
+
 export const VALIDATION_ROUTES: Routes = [
   {
     path: '',
-    loadComponent: () => import('./validation.component').then((m) => m.ValidationComponent),
+    component: ValidationComponent,
   },
 ];

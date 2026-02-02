@@ -3,10 +3,12 @@
   <nz-form-control>
     @if (!fileLoaded()) {
       <nz-upload
+        class="xml-dragger"
         nzType="drag"
         [nzMultiple]="false"
         [nzBeforeUpload]="beforeUpload"
-        class="xml-dragger"
+        [nzSize]="2048"
+        [nzAccept]="'.xml'"
       >
         <p class="ant-upload-drag-icon">
           <span nz-icon nzType="inbox"></span>
@@ -20,9 +22,9 @@
           <span nz-icon nzType="file-text" nzTheme="twotone"></span>
           <span class="file-name">{{ fileName() }}</span>
         </div>
-        <button nz-button nzType="text" nzDanger (click)="onReset()">
+        <button nz-button nzType="text" type="button" nzDanger (click)="onReset()">
           <span nz-icon nzType="delete"></span>
-          Cambiar archivo
+          Eliminar archivo
         </button>
       </div>
       <nz-collapse nzGhost style="margin-top: 8px;">
