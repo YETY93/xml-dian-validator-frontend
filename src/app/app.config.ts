@@ -8,6 +8,12 @@ import {
   MoonOutline,
   SafetyCertificateFill,
   SunOutline,
+  FileSearchOutline,
+  InboxOutline,
+  FileTextTwoTone,
+  DeleteOutline,
+  ExclamationCircleOutline,
+  PlayCircleOutline,
 } from '@ant-design/icons-angular/icons';
 import { es_ES, provideNzI18n } from 'ng-zorro-antd/i18n';
 import { provideNzIcons } from 'ng-zorro-antd/icon';
@@ -17,8 +23,18 @@ import { errorInterceptor } from './core/interceptors/error.interceptor';
 
 registerLocaleData(es);
 
-const icons = [SafetyCertificateFill, CheckCircleOutline, MoonOutline, SunOutline];
-
+const icons = [
+  SafetyCertificateFill,
+  CheckCircleOutline,
+  MoonOutline,
+  SunOutline,
+  FileSearchOutline,
+  InboxOutline,
+  FileTextTwoTone,
+  DeleteOutline,
+  ExclamationCircleOutline,
+  PlayCircleOutline,
+];
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
