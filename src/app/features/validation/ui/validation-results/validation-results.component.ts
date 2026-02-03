@@ -44,6 +44,8 @@ export class ValidationResultsComponent {
 
   getSeverityColor(severity: ErrorStatus): string {
     switch (severity) {
+      case ErrorStatus.FATAL:
+        return 'red';
       case ErrorStatus.ERROR:
         return 'red';
       case ErrorStatus.WARNING:
@@ -57,6 +59,8 @@ export class ValidationResultsComponent {
 
   getSeverityLabel(severity: ErrorStatus): string {
     switch (severity) {
+      case ErrorStatus.FATAL:
+        return 'Documento Críticamente Inválido';
       case ErrorStatus.ERROR:
         return 'Documento Inválido';
       case ErrorStatus.WARNING:
@@ -65,6 +69,20 @@ export class ValidationResultsComponent {
         return 'Documento Válido';
       default:
         return '';
+    }
+  }
+
+  getAlertType(severity: ErrorStatus): 'success' | 'info' | 'warning' | 'error' {
+    switch (severity) {
+      case ErrorStatus.INFO:
+        return 'info';
+      case ErrorStatus.WARNING:
+        return 'warning';
+      case ErrorStatus.ERROR:
+      case ErrorStatus.FATAL:
+        return 'error';
+      default:
+        return 'info';
     }
   }
 }

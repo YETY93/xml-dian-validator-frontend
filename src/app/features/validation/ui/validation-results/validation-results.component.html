@@ -44,7 +44,7 @@
           </div>
         </ng-template>
         @for (err of errorsByType().SEMANTIC; track $index) {
-          <nz-alert [nzType]="err.severity" [nzMessage]="err.message" nzShowIcon class="error-alert"></nz-alert>
+          <nz-alert [nzType]="getAlertType(err.severity)" [nzMessage]="err.message" nzShowIcon class="error-alert"></nz-alert>
         }
       </nz-collapse-panel>
 
