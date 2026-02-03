@@ -18,7 +18,6 @@ import {
   XmlValidationService,
 } from './data';
 import { FileUploadComponent, ValidationFormComponent, ValidationResultsComponent } from './ui';
-import { log } from 'ng-zorro-antd/core/logger';
 
 @Component({
   selector: 'app-validation',
@@ -64,6 +63,20 @@ export class ValidationComponent {
   protected readonly DocumentType = DocumentType;
 
   canValidate = computed(() => this.xml().length > 0 && !this.loading());
+
+  getAlertType(severity: ErrorStatus): 'success' | 'info' | 'warning' | 'error' {
+    switch (severity) {
+      case ErrorStatus.INFO:
+        return 'info';
+      case ErrorStatus.WARNING:
+        return 'warning';
+      case ErrorStatus.ERROR:
+      case ErrorStatus.FATAL:
+        return 'error';
+      default:
+        return 'info';
+    }
+  }
 
   // Event handlers
   onFileSelected(event: { content: string; file: NzUploadFile }): void {

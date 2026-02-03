@@ -47,7 +47,7 @@
   @if (errors().length > 0) {
     <div class="error-banner-section">
       @for (err of errors(); track $index) {
-        <nz-alert [nzType]="err.type" [nzMessage]="err.message" nzShowIcon nzBanner class="error-banner"></nz-alert>
+        <nz-alert [nzType]="getAlertType(err.type)" [nzMessage]="err.message" nzShowIcon nzBanner class="error-banner"></nz-alert>
       }
     </div>
   }

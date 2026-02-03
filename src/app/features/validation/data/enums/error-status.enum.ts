@@ -1,5 +1,6 @@
 export enum ErrorStatus {
-  INFO = 'info',
-  WARNING = 'warning',
-  ERROR = 'error',
+  INFO = 'INFO',
+  WARNING = 'WARNING',
+  ERROR = 'ERROR',
+  FATAL = 'FATAL',
 }
